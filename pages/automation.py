@@ -19,28 +19,28 @@ from styles import button_style, disabled_button_style, mito_theme
 
 dash.register_page(__name__)
 
-
-layout = html.Div([
-    html.Div([  # This is the container div
-        # represents the browser address bar and doesn't render anything
-        dcc.Location(id='url', refresh=False),
-        html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '10px'}),
-        html.Div("", id='automation-num-uploads', style={'color': 'white', 'margin-bottom': '20px'}),
-        Spreadsheet(
-            id='input-data', 
-            import_folder='./data',
-            theme=mito_theme),
-        html.Button('Run Automation', id='run-automation', style=disabled_button_style),
-        dcc.Download(id="download-dataframe-csv"),
-    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
-], style={'height': '100%', 'color': 'white'})
+def layout(**args):
+    return html.Div([
+        html.Div([  # This is the container div
+            # represents the browser address bar and doesn't render anything
+            dcc.Location(id='url', refresh=False),
+            html.Div("", id='automation-metadata', style={'color': 'white', 'marginBottom': '10px'}),
+            html.Div("", id='automation-num-uploads', style={'color': 'white', 'marginBottom': '20px'}),
+            Spreadsheet(
+                id={'type': 'spreadsheet', 'id': 'input-data'},
+                import_folder='./data',
+                theme=mito_theme),
+            html.Button('Run Automation', id='run-automation', style=disabled_button_style),
+            dcc.Download(id="download-dataframe-csv"),
+        ], style={'maxWidth': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
+    ], style={'height': '100%', 'color': 'white'})
 
 
 
 def get_function_from_code_unsafe(code: str) -> Optional[Callable]:
     """
     Given a string of code, returns the first function defined in the code. Notably, to do
-    this, it executes the code, and then returns the first function defined in the code. 
+    this, it executes the code, and then returns the first function defined in the code.
 
     As it executes the full code string, you should only use this function if you trust the
     code string -- and in our case, if the function is not called.
@@ -51,12 +51,12 @@ def get_function_from_code_unsafe(code: str) -> Optional[Callable]:
     exec(code)
     functions = [f for f in locals().values() if callable(f) and f not in functions_before]
 
-    # We then find the one function that was defined inside of this module -- as the above 
+    # We then find the one function that was defined inside of this module -- as the above
     # exec likely defines all the other mitosheet functions (none of which we actaully want)
     for f in functions:
         if inspect.getmodule(f) == inspect.getmodule(get_function_from_code_unsafe):
             return f
-        
+
     raise ValueError(f'No functions defined in code: {code}')
 
 
@@ -71,7 +71,7 @@ def get_automation_metadata(automation):
         html.Div(f'This automation has been run {num_runs} times, and has saved {hours_saved} hours'),
     ])
 
-    # Then, from the code, we get the number of inputs and outputs 
+    # Then, from the code, we get the number of inputs and outputs
     # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
     code_string = automation['automation_code']
     function = get_function_from_code_unsafe(code_string)
@@ -88,9 +88,9 @@ def get_automation_metadata(automation):
     ])
 
 @mito_callback(
-    Output('download-dataframe-csv', 'data'), 
-    Input('run-automation', 'n_clicks'), State('url', 'search'), 
-    State('input-data', 'spreadsheet_result'), prevent_initial_call=True
+    Output('download-dataframe-csv', 'data'),
+    Input('run-automation', 'n_clicks'), State('url', 'search'),
+    State({'type': 'spreadsheet', 'id': 'input-data'}, 'spreadsheet_result'), prevent_initial_call=True
 )
 def run_automation(n_clicks, search, return_value):
     # Prase the search params
@@ -102,18 +102,18 @@ def run_automation(n_clicks, search, return_value):
             html.H3('No automation name provided'),
             html.A('Go back to the main page', href='/')
         ])
-    
+
     automation_name = search['automation_name'][0]
     automation = read_automation_from_file(automation_name)
-    
+
     # If the file doesn't exist, display an error page
     if automation is None:
         return html.Div([
             html.H3(f'Automation {automation_name} does not exist'),
             html.A('Go back to the main page', href='/')
         ])
-   
-    
+
+
     # Get the function
     code_string = automation['automation_code']
     function = get_function_from_code_unsafe(code_string)
@@ -124,7 +124,8 @@ def run_automation(n_clicks, search, return_value):
     # If there are the wrong number of arguments provided in the dfs, return an error
     if len(argument_names) != len(return_value.dfs()):
         return html.Div([
-            html.H3(f'Expected {len(argument_names)} arguments, but got {len(return_value.dfs())}. Please update the mitosheet above.'),
+            html.H3
+                (f'Expected {len(argument_names)} arguments, but got {len(return_value.dfs())}. Please update the mitosheet above.'),
         ])
 
     if function:
@@ -158,9 +159,9 @@ def run_automation(n_clicks, search, return_value):
 
 
 @mito_callback(
-        Output('automation-num-uploads', 'children'), 
-        Output('run-automation', 'style'),
-        Input('url', 'search'), Input('input-data', 'spreadsheet_result')
+    Output('automation-num-uploads', 'children'),
+    Output('run-automation', 'style'),
+    Input('url', 'search'), Input({'type': 'spreadsheet', 'id': 'input-data'}, 'spreadsheet_result')
 )
 def display_number_of_uploads_remaining(search, spreadsheet_result):
     # Prase the search params
@@ -168,31 +169,31 @@ def display_number_of_uploads_remaining(search, spreadsheet_result):
 
     if 'automation_name' not in search:
         return ''
-    
+
     automation_name = search['automation_name'][0]
     automation = read_automation_from_file(automation_name)
 
     # If the file doesn't exist, display an error page
     if automation is None:
         return ''
-    
-    # Then, from the code, we get the number of inputs and outputs 
+
+    # Then, from the code, we get the number of inputs and outputs
     # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
     code_string = automation['automation_code']
     function = get_function_from_code_unsafe(code_string)
 
     # Get the argument names from the function
     argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
-    
+
     num_dfs = len(spreadsheet_result.dfs()) if spreadsheet_result is not None else 0
 
     # Return colored text based on the number of arguments
     if num_dfs == len(argument_names):
         return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'green'}), button_style
-    
+
     if num_dfs > len(argument_names):
         return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'red'}), disabled_button_style
-    
+
     if num_dfs < len(argument_names):
         return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'orange'}), disabled_button_style
 
@@ -207,7 +208,7 @@ def display_page(search):
             html.H3('No automation name provided'),
             html.A('Go back to the main page', href='/')
         ])
-    
+
     automation_name = search['automation_name'][0]
     automation = read_automation_from_file(automation_name)
 
