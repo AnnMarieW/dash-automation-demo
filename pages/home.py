@@ -35,17 +35,17 @@ layout = html.Div([
             'Create New Automation',
             href='/new-automation',
             style={
-                'background-color': '#9d6cff',
+                'backgroundColor': '#9d6cff',
                 'color': 'white',
                 'padding': '10px 15px',
-                'border-radius': '10px',
-                'text-decoration': 'none',
+                'border-Radius': '10px',
+                'textDecoration': 'none',
                 'display': 'inline-block',
                 'margin': '10px 0'
             }
         ),
         
-    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'}),  # This style ensures the content is centered and has a max width
+    ], style={'maxWidth': '1200px', 'margin': 'auto', 'padding': '20px'}),  # This style ensures the content is centered and has a max width
     dcc.Interval(
             id='interval-component',
             interval=1*1000, # in milliseconds
@@ -65,11 +65,11 @@ def load_automations(n):
             html.Li(
                 [
                     html.A([
-                        html.H3(automation['automation_name'], style={'color': 'white', 'margin-top': '0px', 'margin-bottom': '5px'}),
+                        html.H3(automation['automation_name'], style={'color': 'white', 'marginTop': '0px', 'marginBottom': '5px'}),
                         html.Div('Description: ' + automation['automation_description'], style={'color': 'white', 'margin': '0'})
                     ], href=f"/automation?automation_name={automation['automation_name']}")
                 ],
-                style={'color': 'white', 'padding': '10px', 'background-color': '#363637', 'border-radius': '10px', 'margin': '10px 0'}
+                style={'color': 'white', 'padding': '10px', 'backgroundColor': '#363637', 'borderRadius': '10px', 'margin': '10px 0'}
             ) for automation in get_all_automations(5)
         ],
         style={'list-style-type': 'none', 'padding': '0'}

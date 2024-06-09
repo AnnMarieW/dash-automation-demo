@@ -16,9 +16,9 @@ disabled_button_style = {**button_style, 'backgroundColor': '#494650'}
 
 input_style = {
     'width': '100%', 
-    'margin-top': '5px', 
+    'marginTop': '5px',
     'borderRadius': '3px',
-    'font-size': '16px', 
+    'fontSize': '16px',
     'padding': '2px'
 }
 
